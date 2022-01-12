@@ -64,7 +64,7 @@ class App
   end
 
   def find_element_date(element_date)
-  #  if element_date == "day" || element_date == "month"
+  #  if element_date == "day" || element_date == "month" # Этот коо более короткий но почему то не работал
   #    element_date.first
   #  else
   #    element_date.first.upcase
@@ -98,7 +98,7 @@ class App
   end
 
   def headers
-    { 'Content-Type' => 'text/plain'}
+    { 'Content-Type' => 'text/plain' }
   end
 
   def body(string_with_date)
