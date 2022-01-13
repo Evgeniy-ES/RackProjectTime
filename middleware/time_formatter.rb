@@ -1,25 +1,26 @@
 class TimeFormatter
-  AVAILABLE_FORMAT = ["year", "month", "day", "hour", "minute", "second"]
-  HASH_WITH_DATE = {"year" => "Y", "month" => "m", "day" => "d", "hour" => "H", "minute" => "M", "second" => "S"}
-  NEED_PATH = "/time"
+  AVAILABLE_FORMAT = {"year" => "Y", "month" => "m", "day" => "d", "hour" => "H", "minute" => "M", "second" => "S"}
   UNKNOW_FORMAT = "Unknown time format "
 
-  def find_string_with_date(request_path, request_with_data)
-    if request_path == NEED_PATH
-      find_date(request_with_data)
-   else
-     ''
-   end
+  attr_reader :time_string, :invalid_string
+
+
+ def initialize
+   @time_string = ''
+   @invalid_string = ''
  end
 
-  def find_date(request_with_data)
+  def call(request_with_data)
     time = Time.now
-    if request_with_data.include? "/time?format="
-      request_with_data = request_with_data.sub!("/time?format=","")
-      request_with_data.nil? ? forming_string_with_date(AVAILABLE_FORMAT, time) : record_date_in_string(time, request_with_data)
+    if request_with_data.empty?
+      @time_string = forming_string_with_date(get_keys(AVAILABLE_FORMAT), time)
     else
-      forming_string_with_date(AVAILABLE_FORMAT, time)
+      record_date_in_string(time, request_with_data)
     end
+  end
+
+  def succes?
+    @time_string.empty? && @invalid_string.empty? ? false : true
   end
 
   def record_date_in_string(time, request_with_data)
@@ -27,15 +28,20 @@ class TimeFormatter
     rezult_string_with_date(array_with_date, time)
   end
 
+  def get_keys(hash)
+    (hash.keys + hash.values.grep(Hash){|sub_hash| get_keys(sub_hash)}).flatten
+  end
+
   def rezult_string_with_date(array_with_date, time)
-    if (array_with_date - AVAILABLE_FORMAT).empty?
-      forming_string_with_date(array_with_date, time)
+    array_available_format = get_keys(AVAILABLE_FORMAT)
+    if (array_with_date - array_available_format).empty?
+      @time_string = forming_string_with_date(array_with_date, time)
     else
       array_unknow_date = []
       array_with_date.each do |element_date|
-       array_unknow_date << element_date unless AVAILABLE_FORMAT.include? element_date
+       array_unknow_date << element_date unless array_available_format.include? element_date
       end
-      UNKNOW_FORMAT + array_unknow_date.join(', ')
+      @invalid_string = UNKNOW_FORMAT + array_unknow_date.join(', ')
     end
   end
 
@@ -49,9 +55,9 @@ class TimeFormatter
 
   def record_date(string_with_date, time, element_date)
     if string_with_date.nil?
-      time.strftime("%#{HASH_WITH_DATE[element_date]}")
+      time.strftime("%#{AVAILABLE_FORMAT[element_date]}")
     else
-      string_with_date + "-" + time.strftime("%#{HASH_WITH_DATE[element_date]}")
+      string_with_date + "-" + time.strftime("%#{AVAILABLE_FORMAT[element_date]}")
     end
   end
 
